@@ -46,38 +46,33 @@ body{font-family:system-ui;background:#f5f5f5;padding:20px}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbw11Ci43MiE95B7QhRYHYfTwGkCF2UnnrMwdrO86oLf4VnFEvd8u_jznF5oXT5ZkKjw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbz5wNvWNiBDo_2BX-BkiKxD5xCanQvQGjbLnHjUFzBpRTdPrfyRSBuBd-XfXjatvVN_/exec";
 
 let allData = [];
 
 async function loadData() {
-  document.getElementById("loading").style.display = "block";
-  document.getElementById("table").style.display = "none";
   document.getElementById("error").innerHTML = "";
 
   try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await fetch(API_URL, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store"
+    });
+
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
+    }
+
     const data = await res.json();
+    console.log("Datos recibidos:", data);
 
-    allData = data.map(d => ({
-      timestamp: d["Marca temporal"] || "",
-      area: d["Area_Registro"] || "",
-      email: d["Dirección de correo electrónico"] || "",
-      registro: d["Registro_SIU"] || "",
-      proximoCargo: d["Fecha_Proximo_Cargo"] || "",
-      monto: d["Monto_Domiciliacion"] || "",
-      matricula: d["Matricula2"] || ""
-    }));
-
-    render();
-  } catch (e) {
+  } catch (err) {
     document.getElementById("error").innerHTML =
-      `<p style="color:red;padding:20px">Error: ${e.message}</p>`;
-  } finally {
-    document.getElementById("loading").style.display = "none";
+      `<div style="color:red">Error: ${err.message}</div>`;
   }
 }
+
 
 function render() {
   const tbody = document.getElementById("tbody");
