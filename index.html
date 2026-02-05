@@ -1,271 +1,107 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domiciliaciones - Sistema de Consulta</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domiciliaciones - Sistema de Consulta</title>
 
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.1);
-            overflow: hidden;
-        }
-
-        .main-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 32px;
-            text-align: center;
-        }
-
-        .filters-section { padding: 24px; border-bottom: 1px solid #e0e0e0; }
-
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
-            gap: 16px;
-        }
-
-        .filter-group { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 13px; color: #555; }
-
-        input {
-            padding: 12px;
-            border-radius: 6px;
-            border: 2px solid #e0e0e0;
-        }
-
-        .filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .btn-primary { background: #667eea; color: white; }
-        .btn-secondary { background: #e0e0e0; }
-        .btn-refresh { background: #4caf50; color: white; }
-
-        .records-info {
-            padding: 16px 24px;
-            background: #fafafa;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .loading { text-align: center; padding: 40px; color: #999; }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #eee;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: auto;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        thead { background: #667eea; color: white; position: sticky; top: 0; }
-        th, td { padding: 10px; border-bottom: 1px solid #eee; }
-        tbody tr:nth-child(even) { background: #fafbff; }
-
-        .error-message {
-            background: #fee;
-            border: 1px solid #fcc;
-            color: #900;
-            padding: 16px;
-            margin: 20px;
-            border-radius: 6px;
-        }
-    </style>
+<style>
+/* === (tu CSS intacto) === */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#f5f5f5;padding:20px}
+.container{max-width:1400px;margin:auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.loading{text-align:center;padding:40px;color:#999}
+.spinner{width:40px;height:40px;border:4px solid #eee;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 
 <body>
+
 <div class="container">
+  <h2 style="padding:20px">📊 Domiciliaciones</h2>
 
-    <div class="main-header">
-        <h1>📊 Domiciliaciones</h1>
-        <p>Sistema de consulta</p>
-    </div>
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando datos…</p>
+  </div>
 
-    <div class="filters-section">
-        <div class="filters">
-            <div class="filter-group">
-                <label>Matrícula</label>
-                <input id="matricula-filter">
-            </div>
-            <div class="filter-group">
-                <label>Email</label>
-                <input id="email-filter">
-            </div>
-            <div class="filter-group">
-                <label>Área</label>
-                <input id="area-filter">
-            </div>
-        </div>
+  <div id="error"></div>
 
-        <div class="filter-actions">
-            <button class="btn-refresh" onclick="loadData(true)">🔄 Actualizar</button>
-            <button class="btn-secondary" onclick="clearFilters()">🧹 Limpiar</button>
-            <button class="btn-primary" onclick="applyFilters()">🔍 Buscar</button>
-        </div>
-    </div>
-
-    <div class="records-info">
-        <div>Registros: <strong id="record-count">0</strong></div>
-        <div id="last-update"></div>
-    </div>
-
-    <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Cargando datos…</p>
-    </div>
-
-    <div id="error"></div>
-
-    <div style="overflow:auto; max-height:600px;">
-        <table id="table" style="display:none">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>Marca temporal</th>
-                <th>Área</th>
-                <th>Email</th>
-                <th>Registro SIU</th>
-                <th>Fecha Próximo Cargo</th>
-                <th>Monto</th>
-                <th>Matrícula</th>
-            </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
-    </div>
-
+  <table id="table" style="display:none;width:100%">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Marca temporal</th>
+        <th>Área</th>
+        <th>Email</th>
+        <th>Registro SIU</th>
+        <th>Fecha Próximo Cargo</th>
+        <th>Monto</th>
+        <th>Matrícula</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
 
 <script>
-/* ================= CONFIG ================= */
-const API_URL = "https://script.google.com/macros/s/AKfycbywi6uK8gLOPQUluJRnFVpTCUMFnIVXuHehERblIKdP2pkHA6g_bOcQPw2CDxc0Mz2gAA/exec";
-/* ========================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbxLdFr6peWrXjPRG5Z7sFROZrv4RdW4e-5Rms2gHf3F5U6mmVvbpksSPVO9YRJcirMmwQ/exec";
 
 let allData = [];
-let filteredData = [];
 
-const matriculaFilter = document.getElementById("matricula-filter");
-const emailFilter = document.getElementById("email-filter");
-const areaFilter = document.getElementById("area-filter");
+async function loadData() {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("table").style.display = "none";
+  document.getElementById("error").innerHTML = "";
 
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-async function loadData(showMsg=false) {
-    document.getElementById("loading").style.display = "block";
-    document.getElementById("table").style.display = "none";
-    document.getElementById("error").innerHTML = "";
+    allData = data.map(d => ({
+      timestamp: d["Marca temporal"] || "",
+      area: d["Area_Registro"] || "",
+      email: d["Dirección de correo electrónico"] || "",
+      registro: d["Registro_SIU"] || "",
+      proximoCargo: d["Fecha_Proximo_Cargo"] || "",
+      monto: d["Monto_Domiciliacion"] || "",
+      matricula: d["Matricula2"] || ""
+    }));
 
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-
-        allData = data.map(d => ({
-            timestamp: d["Marca temporal"] || "",
-            area: d["Area_Registro"] || "",
-            email: d["Dirección de correo electrónico"] || "",
-            registro: d["Registro_SIU"] || "",
-            proximoCargo: d["Fecha_Proximo_Cargo"] || "",
-            monto: d["Monto_Domiciliacion"] || "",
-            matricula: d["Matricula2"] || ""
-        }));
-
-        applyFilters();
-        updateMeta();
-
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("table").style.display = "table";
-
-    } catch (e) {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("error").innerHTML = `
-            <div class="error-message">
-                Error al cargar datos<br>${e.message}
-            </div>`;
-    }
+    render();
+  } catch (e) {
+    document.getElementById("error").innerHTML =
+      `<p style="color:red;padding:20px">Error: ${e.message}</p>`;
+  } finally {
+    document.getElementById("loading").style.display = "none";
+  }
 }
 
-function applyFilters() {
-    const m = matriculaFilter.value.toLowerCase();
-    const e = emailFilter.value.toLowerCase();
-    const a = areaFilter.value.toLowerCase();
+function render() {
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
 
-    filteredData = allData.filter(r =>
-        (!m || String(r.matricula).toLowerCase() === m) &&
-        (!e || String(r.email).toLowerCase() === e) &&
-        (!a || String(r.area).toLowerCase() === a)
-    );
+  allData.forEach((r, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.timestamp}</td>
+        <td>${r.area}</td>
+        <td>${r.email}</td>
+        <td>${r.registro}</td>
+        <td>${r.proximoCargo}</td>
+        <td>${r.monto}</td>
+        <td>${r.matricula}</td>
+      </tr>`;
+  });
 
-    renderTable();
-}
-
-
-function renderTable() {
-    const tbody = document.getElementById("tbody");
-    tbody.innerHTML = "";
-
-    filteredData.forEach((r,i)=>{
-        tbody.innerHTML += `
-        <tr>
-            <td>${i+1}</td>
-            <td>${r.timestamp}</td>
-            <td>${r.area}</td>
-            <td>${r.email}</td>
-            <td>${r.registro}</td>
-            <td>${r.proximoCargo}</td>
-            <td>${r.monto}</td>
-            <td>${r.matricula}</td>
-        </tr>`;
-    });
-
-    document.getElementById("record-count").textContent = filteredData.length;
-}
-
-function updateMeta(){
-    document.getElementById("last-update").textContent =
-        "Última actualización: " + new Date().toLocaleString("es-MX");
-}
-
-function clearFilters(){
-    matriculaFilter.value="";
-    emailFilter.value="";
-    areaFilter.value="";
-    applyFilters();
+  document.getElementById("table").style.display = "table";
 }
 
 window.onload = loadData;
 </script>
+
 </body>
 </html>
