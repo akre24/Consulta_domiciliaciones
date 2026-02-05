@@ -178,6 +178,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxdWgBy8N45MdoSK1IwP65n
 let allData = [];
 let filteredData = [];
 
+const matriculaFilter = document.getElementById("matricula-filter");
+const emailFilter = document.getElementById("email-filter");
+const areaFilter = document.getElementById("area-filter");
+
+
 async function loadData(showMsg=false) {
     document.getElementById("loading").style.display = "block";
     document.getElementById("table").style.display = "none";
