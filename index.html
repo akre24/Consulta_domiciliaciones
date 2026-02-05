@@ -172,10 +172,8 @@
 </div>
 
 <script>
-/* ================= CONFIG ================= */
-const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1pOoMLLaFWJpI-i7Hc9VTnNDB73s-aZftJWpcEktij48/gviz/tq?tqx=out:json&sheet=Respuestas de formulario 1";
-/* ========================================= */
+const CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSsJwiZyeM-WbqhMOpqrscIz2CX3TzTReNUv5zcfythQC60hvUbCaPeFri-6IbXTzfEagVRehugWjc-/pub?output=csv";
 
 let allData = [];
 let filteredData = [];
@@ -183,45 +181,32 @@ let filteredData = [];
 async function loadData() {
   document.getElementById("loading").style.display = "block";
   document.getElementById("table").style.display = "none";
-  document.getElementById("error").innerHTML = "";
 
   try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
+    const res = await fetch(CSV_URL);
+    const csv = await res.text();
 
-    const json = JSON.parse(
-      text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1)
-    );
+    const rows = csv.split("\n").map(r => r.split(","));
+    const headers = rows.shift();
 
-    const headers = json.table.cols.map(c => c.label);
-    const rows = json.table.rows;
-
-    allData = rows.map(r => {
-      const obj = {};
-      r.c.forEach((cell, i) => {
-        obj[headers[i]] = cell?.v ?? "";
-      });
-      return {
-        timestamp: obj["Marca temporal"] || "",
-        area: obj["Área"] || "",
-        email: obj["Dirección de correo electrónico"] || "",
-        registro: obj["Registro_SIU"] || "",
-        proximoCargo: obj["Fecha_Proximo_Cargo"] || "",
-        monto: obj["Monto_Domiciliacion"] || "",
-        matricula: obj["Matricula2"] || ""
-      };
-    });
+    allData = rows.map(r => ({
+      timestamp: r[0] || "",
+      area: r[1] || "",
+      email: r[2] || "",
+      registro: r[3] || "",
+      proximoCargo: r[4] || "",
+      monto: r[5] || "",
+      matricula: r[6] || ""
+    }));
 
     applyFilters();
-    updateMeta();
 
     document.getElementById("loading").style.display = "none";
     document.getElementById("table").style.display = "table";
 
   } catch (e) {
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("error").innerHTML =
-      `<div class="error">Error al cargar datos<br>${e.message}</div>`;
+    document.getElementById("loading").innerText = "Error cargando datos";
+    console.error(e);
   }
 }
 
@@ -231,9 +216,9 @@ function applyFilters() {
   const a = document.getElementById("f-area").value.toLowerCase();
 
   filteredData = allData.filter(r =>
-    (!m || String(r.matricula).toLowerCase() === m) &&
-    (!e || String(r.email).toLowerCase() === e) &&
-    (!a || String(r.area).toLowerCase() === a)
+    (!m || r.matricula.toLowerCase() === m) &&
+    (!e || r.email.toLowerCase() === e) &&
+    (!a || r.area.toLowerCase() === a)
   );
 
   renderTable();
@@ -260,20 +245,9 @@ function renderTable() {
   document.getElementById("count").textContent = filteredData.length;
 }
 
-function updateMeta() {
-  document.getElementById("updated").textContent =
-    "Última actualización: " + new Date().toLocaleString("es-MX");
-}
-
-function clearFilters() {
-  document.getElementById("f-matricula").value = "";
-  document.getElementById("f-email").value = "";
-  document.getElementById("f-area").value = "";
-  applyFilters();
-}
-
 window.onload = loadData;
 </script>
+
 
 </body>
 </html>
