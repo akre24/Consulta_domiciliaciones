@@ -223,13 +223,14 @@ function applyFilters() {
     const a = areaFilter.value.toLowerCase();
 
     filteredData = allData.filter(r =>
-        (!m || r.matricula.toLowerCase() === m) &&
-        (!e || r.email.toLowerCase() === e) &&
-        (!a || r.area.toLowerCase() === a)
+        (!m || String(r.matricula).toLowerCase() === m) &&
+        (!e || String(r.email).toLowerCase() === e) &&
+        (!a || String(r.area).toLowerCase() === a)
     );
 
     renderTable();
 }
+
 
 function renderTable() {
     const tbody = document.getElementById("tbody");
